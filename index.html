@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>কাটিং মাস্টার নোটস বাই শাফিক</title>
+    <link rel="stylesheet" href="index.css" />
+  </head>
+  <body>
+    <!-- Mobile Header -->
+    <header class="mobile-header">
+      <button class="hamburger-btn" id="hamburgerBtn">
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+      </button>
+      <h1>কাটিং মাস্টার নোটস বাই শাফিক</h1>
+    </header>
+
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h2>Table of Contents</h2>
+      </div>
+      <nav class="nav-menu">
+        <ul id="patternList">
+          <li>
+            <a href="#" data-pattern="normal_selwar" class="nav-link active"
+              >নরমাল সেলোয়ার</a
+            >
+          </li>
+          <li>
+            <a href="#" data-pattern="divider" class="nav-link active"
+              >ডিভাইডার সেলোয়ার</a
+            >
+          </li>
+          <li>
+            <a href="#" data-pattern="plazzu" class="nav-link active"
+              >প্লাজু সেলোয়ার</a
+            >
+          </li>
+          <li>
+            <a href="#" data-pattern="sharara" class="nav-link"
+              >সারারা সেলোয়ার</a
+            >
+          </li>
+          <li>
+            <a href="#" data-pattern="garara" class="nav-link"
+              >গারারা সেলোয়ার</a
+            >
+          </li>
+          <li>
+            <a href="#" data-pattern="choose" class="nav-link">চুজ সেলোয়ার</a>
+          </li>
+          <li>
+            <a href="#" data-pattern="churidar" class="nav-link"
+              >চুড়িদার সেলায়ার</a
+            >
+          </li>
+        </ul>
+      </nav>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content" id="mainContent">
+      <div class="content-container">
+        <div class="welcome-message">
+          <h1>Welcome to Pattern Cutting Notes</h1>
+          <p>
+            Select a pattern from the menu to view detailed cutting instructions
+            and measurements.
+          </p>
+        </div>
+      </div>
+    </main>
+
+    <!-- Overlay for mobile menu -->
+    <div class="overlay" id="overlay"></div>
+
+    <script>
+      class PatternCuttingApp {
+        constructor() {
+          this.hamburgerBtn = document.getElementById("hamburgerBtn");
+          this.sidebar = document.getElementById("sidebar");
+          this.overlay = document.getElementById("overlay");
+          this.mainContent = document.getElementById("mainContent");
+          this.navLinks = document.querySelectorAll(".nav-link");
+
+          this.init();
+        }
+
+        init() {
+          this.setupEventListeners();
+          this.loadDefaultPattern();
+        }
+
+        setupEventListeners() {
+          // Hamburger menu toggle
+          this.hamburgerBtn.addEventListener("click", () =>
+            this.toggleMobileMenu()
+          );
+          this.overlay.addEventListener("click", () => this.closeMobileMenu());
+
+          // Navigation links
+          this.navLinks.forEach((link) => {
+            link.addEventListener("click", (e) => this.handleNavClick(e));
+          });
+
+          // Close mobile menu when clicking on nav link
+          this.navLinks.forEach((link) => {
+            link.addEventListener("click", () => this.closeMobileMenu());
+          });
+
+          this.mainContent.addEventListener("click", (e) => {
+            const link = e.target.closest(".pattern-link");
+            if (link) {
+              e.preventDefault();
+              const pattern = link.getAttribute("data-pattern");
+              if (pattern) {
+                this.loadPattern(pattern);
+                // Optionally, set active nav if you want sidebar highlight
+                this.setActiveNav(
+                  Array.from(this.navLinks).find(
+                    (nav) => nav.getAttribute("data-pattern") === pattern
+                  )
+                );
+              }
+            }
+          });
+          // Handle window resize
+          window.addEventListener("resize", () => this.handleResize());
+        }
+
+        toggleMobileMenu() {
+          this.sidebar.classList.toggle("active");
+          this.overlay.classList.toggle("active");
+          this.hamburgerBtn.classList.toggle("active");
+        }
+
+        closeMobileMenu() {
+          this.sidebar.classList.remove("active");
+          this.overlay.classList.remove("active");
+          this.hamburgerBtn.classList.remove("active");
+        }
+
+        handleResize() {
+          if (window.innerWidth > 768) {
+            this.closeMobileMenu();
+          }
+        }
+
+        async handleNavClick(e) {
+          e.preventDefault();
+          const patternName = e.target.getAttribute("data-pattern");
+
+          if (patternName) {
+            await this.loadPattern(patternName);
+            this.setActiveNav(e.target);
+          }
+        }
+
+        async loadPattern(patternName) {
+          try {
+            this.showLoading();
+
+            const response = await fetch(`${patternName}.html`);
+
+            if (!response.ok) {
+              throw new Error(`Failed to load ${patternName}.html`);
+            }
+
+            const content = await response.text();
+            this.mainContent.innerHTML = content;
+          } catch (error) {
+            this.showError(patternName, error.message);
+          }
+        }
+
+        loadDefaultPattern() {
+          // Load the first pattern by default
+          const firstPattern = this.navLinks[0].getAttribute("data-pattern");
+          if (firstPattern) {
+            this.loadPattern(firstPattern);
+          }
+        }
+
+        setActiveNav(activeLink) {
+          this.navLinks.forEach((link) => link.classList.remove("active"));
+          activeLink.classList.add("active");
+        }
+
+        showLoading() {
+          this.mainContent.innerHTML = `
+                    <div class="content-container">
+                        <div class="loading">
+                            <div class="loading-spinner"></div>
+                            <p>Loading pattern...</p>
+                        </div>
+                    </div>
+                `;
+        }
+
+        showError(patternName, errorMessage) {
+          this.mainContent.innerHTML = `
+                    <div class="content-container">
+                        <div class="error-message">
+                            <h2>Pattern Not Found</h2>
+                            <p>Could not load <strong>${patternName}.html</strong></p>
+                            <p class="error-details">${errorMessage}</p>
+                            <p>Please make sure the file exists in the same directory as index.html</p>
+                        </div>
+                    </div>
+                `;
+        }
+      }
+
+      // Initialize the app when DOM is loaded
+      document.addEventListener("DOMContentLoaded", () => {
+        new PatternCuttingApp();
+      });
+    </script>
+  </body>
+</html>
