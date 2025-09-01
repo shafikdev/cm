@@ -3,18 +3,18 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>কাটিং মাস্টার নোটস বাই শাফিক</title>
+    <title>Pattern Cutting Notes</title>
     <link rel="stylesheet" href="index.css" />
   </head>
   <body>
-    <!-- Mobile Headers -->
+    <!-- Mobile Header -->
     <header class="mobile-header">
       <button class="hamburger-btn" id="hamburgerBtn">
         <span class="hamburger-line"></span>
         <span class="hamburger-line"></span>
         <span class="hamburger-line"></span>
       </button>
-      <h1>কাটিং মাস্টার নোটস বাই শাফিক</h1>
+      <h1>Pattern Cutting Notes</h1>
     </header>
 
     <!-- Sidebar Navigation -->
@@ -30,12 +30,12 @@
             >
           </li>
           <li>
-            <a href="#" data-pattern="divider" class="nav-link active"
+            <a href="#" data-pattern="divider" class="nav-link"
               >ডিভাইডার সেলোয়ার</a
             >
           </li>
           <li>
-            <a href="#" data-pattern="plazzu" class="nav-link active"
+            <a href="#" data-pattern="plazzu" class="nav-link"
               >প্লাজু সেলোয়ার</a
             >
           </li>
@@ -85,13 +85,22 @@
           this.overlay = document.getElementById("overlay");
           this.mainContent = document.getElementById("mainContent");
           this.navLinks = document.querySelectorAll(".nav-link");
+          this.allPatterns = [
+            "normal_selwar",
+            "divider",
+            "plazzu",
+            "sharara",
+            "garara",
+            "choose",
+            "churidar",
+          ]; // Add new patterns here
 
           this.init();
         }
 
         init() {
           this.setupEventListeners();
-          this.loadDefaultPattern();
+          this.loadAllPatterns();
         }
 
         setupEventListeners() {
@@ -101,7 +110,7 @@
           );
           this.overlay.addEventListener("click", () => this.closeMobileMenu());
 
-          // Navigation links
+          // Navigation links - now scroll to sections
           this.navLinks.forEach((link) => {
             link.addEventListener("click", (e) => this.handleNavClick(e));
           });
@@ -111,24 +120,13 @@
             link.addEventListener("click", () => this.closeMobileMenu());
           });
 
-          this.mainContent.addEventListener("click", (e) => {
-            const link = e.target.closest(".pattern-link");
-            if (link) {
-              e.preventDefault();
-              const pattern = link.getAttribute("data-pattern");
-              if (pattern) {
-                this.loadPattern(pattern);
-                // Optionally, set active nav if you want sidebar highlight
-                this.setActiveNav(
-                  Array.from(this.navLinks).find(
-                    (nav) => nav.getAttribute("data-pattern") === pattern
-                  )
-                );
-              }
-            }
-          });
           // Handle window resize
           window.addEventListener("resize", () => this.handleResize());
+
+          // Update active nav on scroll
+          window.addEventListener("scroll", () =>
+            this.updateActiveNavOnScroll()
+          );
         }
 
         toggleMobileMenu() {
@@ -149,44 +147,117 @@
           }
         }
 
-        async handleNavClick(e) {
+        handleNavClick(e) {
           e.preventDefault();
           const patternName = e.target.getAttribute("data-pattern");
 
           if (patternName) {
-            await this.loadPattern(patternName);
+            this.scrollToPattern(patternName);
             this.setActiveNav(e.target);
           }
         }
 
-        async loadPattern(patternName) {
-          try {
-            this.showLoading();
-
-            const response = await fetch(`${patternName}.html`);
-
-            if (!response.ok) {
-              throw new Error(`Failed to load ${patternName}.html`);
-            }
-
-            const content = await response.text();
-            this.mainContent.innerHTML = content;
-          } catch (error) {
-            this.showError(patternName, error.message);
+        scrollToPattern(patternName) {
+          const patternSection = document.getElementById(
+            `pattern-${patternName}`
+          );
+          if (patternSection) {
+            const offsetTop = patternSection.offsetTop - 20; // 20px offset for better visibility
+            window.scrollTo({
+              top: offsetTop,
+              behavior: "smooth",
+            });
           }
         }
 
-        loadDefaultPattern() {
-          // Load the first pattern by default
-          const firstPattern = this.navLinks[0].getAttribute("data-pattern");
-          if (firstPattern) {
-            this.loadPattern(firstPattern);
+        async loadAllPatterns() {
+          try {
+            this.showLoading();
+
+            let allContent = '<div class="all-patterns-container">';
+
+            for (let i = 0; i < this.allPatterns.length; i++) {
+              const patternName = this.allPatterns[i];
+              try {
+                const response = await fetch(`${patternName}.html`);
+                if (response.ok) {
+                  const content = await response.text();
+                  allContent += `
+                                    <section id="pattern-${patternName}" class="pattern-section-wrapper">
+                                        ${content}
+                                    </section>
+                                    ${
+                                      i < this.allPatterns.length - 1
+                                        ? '<div class="pattern-divider"></div>'
+                                        : ""
+                                    }
+                                `;
+                } else {
+                  allContent += this.createErrorSection(
+                    patternName,
+                    "File not found"
+                  );
+                }
+              } catch (error) {
+                allContent += this.createErrorSection(
+                  patternName,
+                  error.message
+                );
+              }
+            }
+
+            allContent += "</div>";
+            this.mainContent.innerHTML = allContent;
+
+            // Set first nav item as active
+            if (this.navLinks.length > 0) {
+              this.setActiveNav(this.navLinks[0]);
+            }
+          } catch (error) {
+            this.showGlobalError(error.message);
+          }
+        }
+
+        createErrorSection(patternName, errorMessage) {
+          return `
+                    <section id="pattern-${patternName}" class="pattern-section-wrapper">
+                        <div class="pattern-content">
+                            <div class="pattern-header">
+                                <div class="pattern-type">Error</div>
+                                <h1>${patternName
+                                  .replace("_", " ")
+                                  .toUpperCase()}</h1>
+                            </div>
+                            <div class="error-message">
+                                <p>Could not load this pattern: ${errorMessage}</p>
+                            </div>
+                        </div>
+                    </section>
+                `;
+        }
+
+        updateActiveNavOnScroll() {
+          const scrollPosition = window.scrollY + 100; // Offset for better UX
+
+          for (let i = this.allPatterns.length - 1; i >= 0; i--) {
+            const patternName = this.allPatterns[i];
+            const section = document.getElementById(`pattern-${patternName}`);
+            const navLink = document.querySelector(
+              `[data-pattern="${patternName}"]`
+            );
+
+            if (section && section.offsetTop <= scrollPosition) {
+              this.setActiveNav(navLink);
+              break;
+            }
           }
         }
 
         setActiveNav(activeLink) {
           this.navLinks.forEach((link) => link.classList.remove("active"));
-          activeLink.classList.add("active");
+          if (activeLink) {
+            activeLink.classList.add("active");
+          }
         }
 
         showLoading() {
@@ -194,20 +265,19 @@
                     <div class="content-container">
                         <div class="loading">
                             <div class="loading-spinner"></div>
-                            <p>Loading pattern...</p>
+                            <p>Loading all patterns...</p>
                         </div>
                     </div>
                 `;
         }
 
-        showError(patternName, errorMessage) {
+        showGlobalError(errorMessage) {
           this.mainContent.innerHTML = `
                     <div class="content-container">
                         <div class="error-message">
-                            <h2>Pattern Not Found</h2>
-                            <p>Could not load <strong>${patternName}.html</strong></p>
+                            <h2>Failed to Load Patterns</h2>
                             <p class="error-details">${errorMessage}</p>
-                            <p>Please make sure the file exists in the same directory as index.html</p>
+                            <p>Please make sure all pattern HTML files exist in the same directory as index.html</p>
                         </div>
                     </div>
                 `;

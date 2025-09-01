@@ -132,13 +132,33 @@ body {
   min-height: 100vh;
   background: white;
   transition: margin-left 0.3s ease;
-  padding: 0 40px;
+  padding: 40px;
 }
 
 .content-container {
-  padding: 40px 0;
   max-width: 1000px;
   margin: 0 auto;
+}
+
+/* All patterns container */
+.all-patterns-container {
+  width: 100%;
+}
+
+.pattern-section-wrapper {
+  margin-bottom: 60px;
+  padding: 40px;
+  background: #fdfdfd;
+  border-radius: 12px;
+  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e8ecef;
+}
+
+.pattern-divider {
+  height: 3px;
+  background: linear-gradient(to right, #e74c3c, #3498db);
+  margin: 40px 0;
+  border-radius: 2px;
 }
 
 /* Welcome Message */
@@ -418,10 +438,12 @@ body {
 
   .main-content {
     margin-left: 0;
+    padding: 20px;
     padding-top: 60px;
   }
 
-  .content-container {
+  .pattern-section-wrapper {
+    margin-bottom: 40px;
     padding: 20px;
   }
 
